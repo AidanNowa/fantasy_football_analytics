@@ -2,3 +2,5 @@
 venv/
 ENV/
 env/
+auth/
+
