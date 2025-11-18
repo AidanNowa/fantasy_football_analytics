@@ -1,0 +1,2 @@
+In case you forget how to start your venv like I always do:
+source .venv/bin/activate
