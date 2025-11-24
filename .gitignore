@@ -3,4 +3,4 @@ venv/
 ENV/
 env/
 auth/
-
+src/__pycache__/
