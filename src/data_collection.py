@@ -70,3 +70,7 @@ def create_weekly_line_graph(df, x_axis_label, y_axis_label):
     plt.grid(True)
     plt.show()
 
+def get_positional_margins(team_stats, pos, margins):
+    pos_stats = get_position_stats(team_stats, pos)
+    pos_names = pos_stats['name'].to_list()
+    return margins[margins['name'].isin(pos_names)] 
