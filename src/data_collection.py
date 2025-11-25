@@ -1,5 +1,6 @@
 import pandas as pd
 from yahoo_fantasy_api import League, Team
+import matplotlib.pyplot as plt
 
 curr_season_code = 461
 
@@ -48,8 +49,24 @@ def get_weekly_totals(league, team):
         new_totals = new_week['total_points'].tolist()
         weekly_data.insert(i, str(i), new_totals, True)
     return weekly_data.sort_values('name')
-        
 
+def calculate_margin(weekly_totals, projections, curr_week):
+    weekly_totals = weekly_totals.reset_index(drop=True)
+    projections_margin = pd.DataFrame(projections['name'])
+    for i in range(1, curr_week+1):
+        week_margin = (weekly_totals[str(i)] - projections[str(i)])
+        margin = week_margin.to_list()
+        projections_margin.insert(i, str(i), margin, True)
+    return projections_margin        
 
-
+def create_weekly_line_graph(df, x_axis_label, y_axis_label):
+    df_long = df.melt(id_vars='name', var_name=x_axis_label, value_name=y_axis_label)
+    df_long[x_axis_label] = df_long[x_axis_label].astype(int)
+    for name, group in df_long.groupby('name'):
+        plt.plot(group[x_axis_label], group[y_axis_label], marker = 'o', label=name)
+    plt.xlabel(x_axis_label)
+    plt.ylabel(y_axis_label)
+    plt.legend()
+    plt.grid(True)
+    plt.show()
 
