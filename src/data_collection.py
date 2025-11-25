@@ -47,7 +47,7 @@ def get_weekly_totals(league, team):
         new_week['total_points'] = pd.to_numeric(new_week['total_points'])
         new_totals = new_week['total_points'].tolist()
         weekly_data.insert(i, str(i), new_totals, True)
-    return weekly_data
+    return weekly_data.sort_values('name')
         
 
 
