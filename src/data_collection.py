@@ -74,3 +74,12 @@ def get_positional_margins(team_stats, pos, margins):
     pos_stats = get_position_stats(team_stats, pos)
     pos_names = pos_stats['name'].to_list()
     return margins[margins['name'].isin(pos_names)] 
+
+def sum_margins(margins):
+    sum_df = margins.set_index('name')
+    return sum_df.sum(axis=1)
+
+
+
+
+
