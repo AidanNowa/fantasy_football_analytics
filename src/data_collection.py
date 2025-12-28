@@ -79,7 +79,9 @@ def sum_margins(margins):
     sum_df = margins.set_index('name')
     return sum_df.sum(axis=1)
 
-
-
+def get_weekly_longs(weekly_totals):
+    weekly_totals_long = weekly_totals.melt(id_vars='name', var_name='week', value_name='points')
+    weekly_totals_long['week'] = weekly_totals_long['week'].astype(int)
+    return weekly_totals_long
 
 
