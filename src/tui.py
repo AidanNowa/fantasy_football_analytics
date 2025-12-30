@@ -91,7 +91,8 @@ class WeeklyTotalsApp(App[None]):
                 marker="dot",
                 label=name,
             )
-
+        
+        plt.ylim(weekly_longs["points"].min() - 2, weekly_longs["points"].max() + 5)
         plot.refresh()    
 
     #def on_mount(self) -> None:

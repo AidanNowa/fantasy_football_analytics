@@ -38,12 +38,19 @@ def get_position_stats(team_stats, pos):
 
 def get_weekly_totals(league, team):
     total_weeks = 17
+    if team.empty:
+        return pd.DataFrame(columns=["name"])
     player_id_list = team['player_id'].tolist()
+    if not player_id_list:
+        return pd.DataFrame(columns=["name"])
+
     weekly_data = pd.DataFrame(team['name'])
     #week_1_data = league.player_stats(player_id_list, req_type='week', week=1)
     #weekly_data = pd.concat([week_1_data['name'], week_1_data['total_points']], axis=1, keys=['name', '1'])
     for i in range(1, 17):
         new_week = league.player_stats(player_id_list, req_type='week', week=i)
+        if not new_week:
+            continue
         new_week = pd.json_normalize(new_week)
         new_week['total_points'] = pd.to_numeric(new_week['total_points'])
         new_totals = new_week['total_points'].tolist()
