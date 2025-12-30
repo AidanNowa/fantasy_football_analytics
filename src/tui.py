@@ -74,8 +74,15 @@ def main():
     
     weeklyApp = WeeklyTotalsApp(weekly_longs)
     
+    team_stats = get_team_yearly_stats(league, team)
+    wrs = get_position_stats(team_stats, 'WR')
+    wr_weekly = get_weekly_totals(league, wrs)
+    wr_longs = get_weekly_longs(wr_weekly)
+    
+    wrsApp = WeeklyTotalsApp(wr_longs)
     
     weeklyApp.run() 
+    wrsApp.run()
 
 
 if __name__ == "__main__":
