@@ -33,14 +33,37 @@ class BarChartApp(App[None]):
 class WeeklyTotalsApp(App[None]):    
 
     def __init__(self, weekly_longs):
+        super().__init__()
         self.weekly_longs = weekly_longs
+        #print(self.weekly_longs)
 
     def compose(self) -> ComposeResult:
-        yield PlotextPlot()
+        yield PlotextPlot(id="plot")
     
     def on_mount(self) -> None:
-        for name, group in weekly_longs.groupby('name'):
-            plt.plot(group['week'], group['points'], marker = 'o', label=name)
+        plot = self.query_one("#plot", PlotextPlot)
+        plt = plot.plt
+
+        #plt.clear_figures()
+        #plt.clear_data()
+    
+        for name, group in self.weekly_longs.groupby("name"):
+            plt.plot(
+                group["week"].tolist(),
+                group["points"].tolist(),
+                marker="dot",
+                label=name,
+            )
+
+        plot.refresh()    
+
+    #def on_mount(self) -> None:
+        #for name, group in weekly_longs.groupby('name'):
+        #    plt.plot(group['week'], group['points'], marker = 'o', label=name)
+        #plt = self.query_one(PlotextPlot).plt
+        #print(self.weekly_longs)
+        #y = plt.scatter(self.weekly_longs)
+        #plt.scatter(y)
 
 def main():
     oauth = OAuth2(None, None, from_file='../auth/oauth2yahoo.json')
@@ -50,7 +73,7 @@ def main():
     weekly_longs = get_weekly_longs(weekly_totals)
     
     weeklyApp = WeeklyTotalsApp(weekly_longs)
-    #weeklyApp.weekly_longs = weekly_longs
+    
     
     weeklyApp.run() 
 
