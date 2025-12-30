@@ -84,4 +84,15 @@ def get_weekly_longs(weekly_totals):
     weekly_totals_long['week'] = weekly_totals_long['week'].astype(int)
     return weekly_totals_long
 
+def get_weekly_longs_by_position(league, team, position) -> pd.DataFrame:
+    team_stats = get_team_yearly_stats(league, team)
+    pos_stats = get_position_stats(team_stats, position)
+    pos_weekly = get_weekly_totals(league, pos_stats)
+    return get_weekly_longs(pos_weekly)    
+
+
+
+
+
+
 

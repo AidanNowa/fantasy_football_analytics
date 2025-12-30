@@ -1,5 +1,5 @@
 from textual.app import App, ComposeResult
-
+from textual.widgets import Select, Static
 from textual_plotext import PlotextPlot
 
 from yahoo_fantasy_api import League, Team
@@ -31,23 +31,60 @@ class BarChartApp(App[None]):
         plt.title("Programming Languages")
 
 class WeeklyTotalsApp(App[None]):    
+    
+    CSS = """
+    Screen {
+        layout: vertical;
+    }
 
-    def __init__(self, weekly_longs):
+    #controls {
+        height: 3;
+    }
+
+    #plot {
+        height: 1fr;
+    }
+    """
+
+    def __init__(self, weekly_longs, league, team):
         super().__init__()
-        self.weekly_longs = weekly_longs
+        self.get_longs_by_position = get_weekly_longs_by_position
+        self.weekly_longs = None
+        self.league = league
+        self.team = team
         #print(self.weekly_longs)
 
     def compose(self) -> ComposeResult:
+        yield Static("Filter by Position", id="controls")
+
+        yield Select(
+            options=[
+              
+                ("Wide Receivers", "WR"),
+                ("Running Backs", "RB"),
+            ],
+            value="WR",
+            id="position_select",
+        )
+
         yield PlotextPlot(id="plot")
     
     def on_mount(self) -> None:
+        self.update_plot("ALL")
+
+    def on_select_changed(self, event:Select.Changed) -> None:
+        if event.select.id == "position_select":
+            self.update_plot(event.value)
+
+    def update_plot(self, position: str) -> None:
         plot = self.query_one("#plot", PlotextPlot)
         plt = plot.plt
 
         #plt.clear_figures()
         #plt.clear_data()
+        weekly_longs = self.get_longs_by_position(self.league, self.team, position)
     
-        for name, group in self.weekly_longs.groupby("name"):
+        for name, group in weekly_longs.groupby("name"):
             plt.plot(
                 group["week"].tolist(),
                 group["points"].tolist(),
@@ -72,18 +109,20 @@ def main():
     weekly_totals = get_weekly_totals(league, team)
     weekly_longs = get_weekly_longs(weekly_totals)
     
-    weeklyApp = WeeklyTotalsApp(weekly_longs)
+    #weeklyApp = WeeklyTotalsApp(weekly_longs)
     
     team_stats = get_team_yearly_stats(league, team)
     wrs = get_position_stats(team_stats, 'WR')
     wr_weekly = get_weekly_totals(league, wrs)
     wr_longs = get_weekly_longs(wr_weekly)
     
-    wrsApp = WeeklyTotalsApp(wr_longs)
+    #wrsApp = WeeklyTotalsApp(wr_longs)
     
-    weeklyApp.run() 
-    wrsApp.run()
+    #weeklyApp.run() 
+    #wrsApp.run()
 
+    app = WeeklyTotalsApp(get_weekly_longs_by_position, league, team)
+    app.run()
 
 if __name__ == "__main__":
 
