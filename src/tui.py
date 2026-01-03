@@ -1,9 +1,11 @@
 from textual.app import App, ComposeResult
 from textual.widgets import Select, Static
 from textual_plotext import PlotextPlot
-
+from textual.containers import Container
 from yahoo_fantasy_api import League, Team
 from yahoo_oauth import OAuth2
+#import sys
+#sys.path.append('../')
 from data_collection import *
 
 class ScatterApp(App[None]):
@@ -41,17 +43,24 @@ class WeeklyTotalsApp(App[None]):
         height: 3;
     }
 
-    #plot {
+    #plots {
+        layout: horizontal;
         height: 1fr;
+    }
+
+    PlotextPlot {
+        width: 1fr;
     }
     """
 
-    def __init__(self, weekly_longs, league, team):
+    def __init__(self, weekly_longs, league, team, projections):
         super().__init__()
         self.get_longs_by_position = get_weekly_longs_by_position
+        self.get_margin_longs = get_margin_longs_by_position
         self.weekly_longs = None
         self.league = league
         self.team = team
+        self.projections = projections
         #print(self.weekly_longs)
 
     def compose(self) -> ComposeResult:
@@ -60,28 +69,51 @@ class WeeklyTotalsApp(App[None]):
         yield Select(
             options=[
               
+                ("Quarterbacks", "QB"),
                 ("Wide Receivers", "WR"),
                 ("Running Backs", "RB"),
+                ("Tight Ends", "TE"),
+                ("WR/RB", "W/R"),
+                ("WR/RB/TE", "W/R/T"),
+                ("Kickers", "K"),
+                ("Team Defense", "DEF"),
+                ("Defensive Backs", "DB"),
+                ("Defensive Linemen", "DL"),
+                ("Linebackers", "LB")
+            
             ],
-            value="WR",
+            value="QB",
             id="position_select",
         )
-
-        yield PlotextPlot(id="plot")
+        with Container(id="plots"):
+            yield PlotextPlot(id="points_plot")
+            yield PlotextPlot(id="margin_plot")
     
     def on_mount(self) -> None:
-        self.update_plot("ALL")
+        #self.update_plots("ALL")
+        pass
 
     def on_select_changed(self, event:Select.Changed) -> None:
+        position = event.value
+        if not position:
+            return
         if event.select.id == "position_select":
-            self.update_plot(event.value)
+            self.update_plots(event.value)
 
-    def update_plot(self, position: str) -> None:
-        plot = self.query_one("#plot", PlotextPlot)
+    def update_plots(self, position: str) -> None:
+        points_plot = self.query_one("#points_plot", PlotextPlot)
+        margin_plot = self.query_one("#margin_plot", PlotextPlot)
+        
+        self._draw_points(points_plot, position)
+        self._draw_margin(margin_plot, position)
+
+    def _draw_points(self, plot: PlotextPlot, position: str) -> None:
         plt = plot.plt
 
-        #plt.clear_figures()
-        #plt.clear_data()
+        # reset graph when swapping
+        plt.clear_figure()
+        plt.clear_data()
+        
         weekly_longs = self.get_longs_by_position(self.league, self.team, position)
     
         for name, group in weekly_longs.groupby("name"):
@@ -92,21 +124,36 @@ class WeeklyTotalsApp(App[None]):
                 label=name,
             )
         
-        plt.ylim(weekly_longs["points"].min() - 2, weekly_longs["points"].max() + 5)
+        plt.ylim(weekly_longs["points"].min(), weekly_longs["points"].max() + 5)
         plot.refresh()    
 
-    #def on_mount(self) -> None:
-        #for name, group in weekly_longs.groupby('name'):
-        #    plt.plot(group['week'], group['points'], marker = 'o', label=name)
-        #plt = self.query_one(PlotextPlot).plt
-        #print(self.weekly_longs)
-        #y = plt.scatter(self.weekly_longs)
-        #plt.scatter(y)
+    def _draw_margin(self, plot: PlotextPlot, position: str) -> None:
+        plt = plot.plt
+
+        # reset graph when swapping
+        plt.clear_figure()
+        plt.clear_data()
+
+        weekly_margin_longs = self.get_margin_longs(self.league, self.team, position, self.projections)
+        
+        for name, group in weekly_margin_longs.groupby("name"):
+            plt.bar(
+                group["week"],
+                group["margin"],
+                label=name,
+            )
+
+        #self.hline(0)
+        plt.ylim(weekly_margin_longs["margin"].min() - 5, weekly_margin_longs["margin"].max() + 5)
+        plot.refresh()
+
+        
 
 def main():
     oauth = OAuth2(None, None, from_file='../auth/oauth2yahoo.json')
     league = League(oauth, league_id='461.l.6288') #game_key.l.leauge_key
     team = get_team_from_num(oauth, 12, 7)
+    projections = pd.read_csv('../data/projections_2025.csv')
     weekly_totals = get_weekly_totals(league, team)
     weekly_longs = get_weekly_longs(weekly_totals)
     
@@ -122,7 +169,7 @@ def main():
     #weeklyApp.run() 
     #wrsApp.run()
 
-    app = WeeklyTotalsApp(get_weekly_longs_by_position, league, team)
+    app = WeeklyTotalsApp(get_weekly_longs_by_position, league, team, projections)
     app.run()
 
 if __name__ == "__main__":

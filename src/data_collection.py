@@ -37,7 +37,7 @@ def get_position_stats(team_stats, pos):
     return team_stats[pos_mask]
 
 def get_weekly_totals(league, team):
-    total_weeks = 17
+    total_weeks = 18
     if team.empty:
         return pd.DataFrame(columns=["name"])
     player_id_list = team['player_id'].tolist()
@@ -47,7 +47,7 @@ def get_weekly_totals(league, team):
     weekly_data = pd.DataFrame(team['name'])
     #week_1_data = league.player_stats(player_id_list, req_type='week', week=1)
     #weekly_data = pd.concat([week_1_data['name'], week_1_data['total_points']], axis=1, keys=['name', '1'])
-    for i in range(1, 17):
+    for i in range(1, total_weeks):
         new_week = league.player_stats(player_id_list, req_type='week', week=i)
         if not new_week:
             continue
@@ -58,13 +58,30 @@ def get_weekly_totals(league, team):
     return weekly_data.sort_values('name')
 
 def calculate_margin(weekly_totals, projections, curr_week):
-    weekly_totals = weekly_totals.reset_index(drop=True)
+    '''
+     weekly_totals = weekly_totals.reset_index(drop=True)
     projections_margin = pd.DataFrame(projections['name'])
     for i in range(1, curr_week+1):
         week_margin = (weekly_totals[str(i)] - projections[str(i)])
         margin = week_margin.to_list()
         projections_margin.insert(i, str(i), margin, True)
     return projections_margin        
+    '''
+    weekly_totals = weekly_totals.set_index("name")
+    projections = projections.set_index("name")
+    
+    common_players = weekly_totals.index.intersection(projections.index)
+    weekly_totals = weekly_totals.loc[common_players]
+    projections = projections.loc[common_players]
+
+    #only keep players that exist in weekly_totals
+    projections_margin = pd.DataFrame(index=weekly_totals.index).reset_index()
+    for i in range(1, curr_week + 1):
+        week = str(i)
+        week_margin = (weekly_totals[week] - projections.loc[weekly_totals.index, week])
+        projections_margin.insert(i, week, week_margin.to_list(), True)
+    return projections_margin
+
 
 def create_weekly_line_graph(df, x_axis_label, y_axis_label):
     df_long = df.melt(id_vars='name', var_name=x_axis_label, value_name=y_axis_label)
@@ -91,13 +108,25 @@ def get_weekly_longs(weekly_totals):
     weekly_totals_long['week'] = weekly_totals_long['week'].astype(int)
     return weekly_totals_long
 
+def get_margin_weekly_longs(weekly_margins):
+    weekly_margins_long = weekly_margins.melt(id_vars='name', var_name='week', value_name=    'margin')
+    weekly_margins_long['week'] = weekly_margins_long['week'].astype(int)
+    weekly_margins_long = weekly_margins_long.dropna(subset=["margin"])
+    return weekly_margins_long
+
 def get_weekly_longs_by_position(league, team, position) -> pd.DataFrame:
     team_stats = get_team_yearly_stats(league, team)
     pos_stats = get_position_stats(team_stats, position)
     pos_weekly = get_weekly_totals(league, pos_stats)
     return get_weekly_longs(pos_weekly)    
 
-
+def get_margin_longs_by_position(league, team, position, projections) -> pd.DataFrame:
+    curr_week = 17
+    team_stats = get_team_yearly_stats(league, team)
+    pos_stats = get_position_stats(team_stats, position)
+    pos_weekly = get_weekly_totals(league, pos_stats)
+    pos_margin = calculate_margin(pos_weekly, projections, curr_week)
+    return get_margin_weekly_longs(pos_margin)    
 
 
 
