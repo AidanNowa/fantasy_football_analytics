@@ -25,9 +25,13 @@ This project allows a user with a Yahoo fantasy football team review thier playe
 
 ## Project Structure
 src/
+
 |-- tui.py              # Textual application and plotting
+
 |-- data_collection.py  # Data fetching and transformations functions
+
 noteboks/
+
 |-- exploration.ipynb   # Jupyter notebooks showing testing, exploration, and function use
 
 ## How to Run
