@@ -4,7 +4,7 @@ A simple terminal-based fantasy football analytics dashboard for exploring weekl
 This project was used as my "First Personal Project" for the Boot.dev coursework
 
 ## Overview
-This project allows a user with a Yahoo fantasy football team review thier players total points scored and their difference over/under projection on a weekly scale. It generates a TUI that allows the user to swap between position groups to make insightful decisions about who to start each week. Users who want to quickly generate weekly graphs beyond what is provided by the base Yahoo fantasy football website can use this as a base to build out thier own decision trees. Data exploration can also be carried out within notebooks or other files using some of the functions created during the data exploration phase of this project.
+This project allows a user with a Yahoo fantasy football team to review their players' total points scored and their difference over/under projection on a weekly scale. It generates a TUI that allows the user to swap between position groups to make insightful decisions about who to start each week. Users who want to quickly generate weekly graphs beyond what is provided by the base Yahoo fantasy football website can use this as a base to build out their own decision trees. Data exploration can also be carried out within notebooks or other files using some of the functions created during the data exploration phase of this project.
 
 ## Features
 * Interactive terminal-based charts
